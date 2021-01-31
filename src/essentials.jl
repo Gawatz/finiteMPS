@@ -93,3 +93,12 @@ function singleSiteExpValue(M::AbstractArray{<:T}, C::AbstractArray{<:T}, Op::Ab
 	#expVlaue = 2.0
 	return expValue
 end
+
+
+
+
+function getCoef(MPSvec)
+
+
+
+end

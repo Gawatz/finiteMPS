@@ -1,5 +1,22 @@
 using TensorOperations
 
+
+
+
+
+#
+#	sanity checks
+#
+# Not tested yet
+function sanityLeftCan(M::AbstractArray{<:Number}; atol = 10e-10) 
+
+	@tensor tmp[β1, β2] := M[α, d, β1]*conj(M)[α, d, β2]
+
+
+	return isapprox(tmp, Id(size(tmp)[1]), atol)
+end
+
+
 #
 #	Can forms
 #
@@ -213,10 +230,8 @@ function getSchmidtVec(MPSvec::Vector{<:Any}, site::Int)
 	rightHalf = @view MPSvec[site+1:end]
 
 	Svec_left = mergeMPS(leftHalf) #(phys_dim, ingoing, outgoing)
-	@show size(Svec_left)
 	Svec_left = Svec_left[:,1,:]
 	Svec_right = mergeMPS(rightHalf)
-	@show size(Svec_right)
 	Svec_right = Svec_right[:,:,1]
 
 	return S, Svec_left, Svec_right

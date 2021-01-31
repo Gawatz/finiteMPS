@@ -20,7 +20,7 @@ return:
 
 
 """
-function finiteMPS(N::Int, d::Int, maxD::Int)
+function randMPS(N::Int, d::Int, maxD::Int)
 	MPSvec = []
 	Cvec = []
 

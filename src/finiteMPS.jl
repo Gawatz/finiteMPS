@@ -2,10 +2,10 @@ module finiteMPS
 
 
 
-export finiteMPS
-export rightCanMPS, leftCanMPS, leftCanSite, rightCanSite
+export randMPS
+export rightCanMPS, leftCanMPS, leftCanSite, rightCanSite, mixedCanMPS
 export applyTM_OP, applyTM_MPO
-export evo_sweep, vmps_sweep, iter_applyMPO
+export evo_sweep, evo_sweep_2Site, vmps_sweep, iter_applyMPO
 export getOverlap, getExpValue, singleSiteExpValue
 
 
