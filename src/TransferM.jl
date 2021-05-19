@@ -1,11 +1,8 @@
-using TensorOperations, KrylovKit, LinearAlgebra
-using MPOmodule2
-
 #
 #	apply TM 
 #
-function applyTM_OP(MPS_ket::AbstractArray{<:Number}, MPS_bra::AbstractArray{<:Number}, Op::localOp, 
-			x::AbstractArray{<:Number}; left::Bool = true)
+function applyTM_OP(MPS_ket::AbstractArray{<:Number}, MPS_bra::AbstractArray{<:Number}, Op::localOp{DT,D}, 
+		    x::AbstractArray{<:Number}; left::Bool = true) where {DT<:Number, D}
 	
 	res = zeros(eltype(x), size(MPS_bra)[[1,3][left+1]], size(MPS_ket)[[1,3][left+1]])
 	tmp = zeros(eltype(x), size(x)[2], size(MPS_bra)[[1,3][left+1]])
@@ -14,8 +11,8 @@ function applyTM_OP(MPS_ket::AbstractArray{<:Number}, MPS_bra::AbstractArray{<:N
 		@inbounds for op in eachoperation(Op)
 
 			c = ComplexF64(op[1])
-			mket = @view MPS_ket[:, op[2], :]	#α_ket, β_ket
-			mbra = @view MPS_bra[:, op[3], :]	#α_bra, β_bra
+			mket = @view MPS_ket[:, op[2], :] #α_ket, β_ket
+			mbra = @view MPS_bra[:, op[3], :] #α_bra, β_bra
 
 			LinearAlgebra.BLAS.gemm!('T','N', c, x, conj.(mbra), ComplexF64(0.0), tmp)  #α_ket, β_bra
 			LinearAlgebra.BLAS.gemm!('T', 'N', ComplexF64(1.0), tmp, mket, ComplexF64(1.0), res)
@@ -26,8 +23,8 @@ function applyTM_OP(MPS_ket::AbstractArray{<:Number}, MPS_bra::AbstractArray{<:N
 		@inbounds for op in eachoperation(Op)
 			
 			c = ComplexF64(op[1])
-			mket = @view MPS_ket[:, op[2], :]	#α_ket, β_ket
-			mbra = @view MPS_bra[:, op[3], :]	#α_bra, β_bra
+			mket = @view MPS_ket[:, op[2], :] #α_ket, β_ket
+			mbra = @view MPS_bra[:, op[3], :] #α_bra, β_bra
 
 			LinearAlgebra.BLAS.gemm!('T','T', c, x, conj.(mbra), ComplexF64(0.0), tmp)  #β_ket, α_bra
 			LinearAlgebra.BLAS.gemm!('T', 'T', ComplexF64(1.0), tmp, mket, ComplexF64(1.0), res)
@@ -40,19 +37,23 @@ function applyTM_OP(MPS_ket::AbstractArray{<:Number}, MPS_bra::AbstractArray{<:N
 	return res
 end
 
-function applyTM_OP(MPS_ket::Vector{<:Any}, MPS_bra::Vector{<:Any}, Op_string::NTuple{N,Int}, vecMPO::Vector{MPO}, 
+function applyTM_OP(MPSket::Vector{<:Any}, MPSbra::Vector{<:Any}, Op_string::NTuple{N,Int}, vecMPO::Vector{<:MPOsparseT}, 
  		  x::AbstractArray{<:Number}; left::Bool = true) where {N}
 	
-	# TODO check that MPS_ket is the same length as MPS_bra and that phys dim match
-	unitCellLength = length(MPS_ket)
+	# TODO check that MPSket is the same length as MPSbra and that phys dim match
+	mps_chainLength = length(MPSket)
+	mps_chainLength == length(MPSbra) || throw(ArgumentError("length of ket and bra MPS do not match."))
+	mps_chainLength == N || throw(ArgumentError("MPO and MPS length do not match."))
+
+
 
 	if left == true 
-		A = MPS_ket[1]
-        	B = MPS_bra[1]
+		A = MPSket[1]
+        	B = MPSbra[1]
 		local_op = vecMPO[1][Op_string[1]]
 	else 
-		A = MPS_ket[end]
-		B = MPS_bra[end]
+		A = MPSket[end]
+		B = MPSbra[end]
 		local_op = vecMPO[end][Op_string[end]]
 	end
 
@@ -60,11 +61,11 @@ function applyTM_OP(MPS_ket::Vector{<:Any}, MPS_bra::Vector{<:Any}, Op_string::N
 	res = left == true ? applyTM_OP(A, B, local_op, x; left = true) : applyTM_OP(A, B, local_op, x; left = false)
 
 	# go thorugh unit cell
-	if unitCellLength > 1
+	if mps_chainLength > 1
 		if left == true
-			res = applyTM_OP(MPS_ket[2:end], MPS_bra[2:end], Op_string[2:end], vecMPO[2:end], res; left = true)
+			res = applyTM_OP(MPSket[2:end], MPSbra[2:end], Op_string[2:end], vecMPO[2:end], res; left = true)
 		else
-			res = applyTM_OP(MPS_ket[1:end-1], MPS_bra[1:end-1], Op_string[1:end-1], vecMPO[1:end-1], res; left = false)
+			res = applyTM_OP(MPSket[1:end-1], MPSbra[1:end-1], Op_string[1:end-1], vecMPO[1:end-1], res; left = false)
 		end
 	end
 
@@ -72,8 +73,10 @@ function applyTM_OP(MPS_ket::Vector{<:Any}, MPS_bra::Vector{<:Any}, Op_string::N
 	return res # (α_bra , α_ket) 
 end
 
-function applyTM_MPO(MPSket::Vector{<:Any}, MPSbra::Vector{<:Any}, MPOvec::Vector{MPO}, x::Vector{<:Any}; left::Bool = true)
-	MPS_ChainLength = length(MPSket)
+function applyTM_MPO(MPSket::Vector{<:Any}, MPSbra::Vector{<:Any}, MPOvec::Vector{<:MPOsparseT}, x::Vector{<:Any}; left::Bool = true) where {DT<:Number, D}
+	mps_chainLength = length(MPSket)
+	mps_chainLength == length(MPSbra) || throw(ArgumentError("length of ket and bra MPS do not match."))
+	mps_chainLength == length(MPOvec) || throw(ArgumentError("MPO and MPS length do not match."))
 
 	#check if same length then MPOvec
 	
@@ -137,7 +140,7 @@ function applyTM_MPO(MPSket::Vector{<:Any}, MPSbra::Vector{<:Any}, MPOvec::Vecto
 
 
 
-	if MPS_ChainLength > 1
+	if mps_chainLength > 1
 		if left == true
 			YLa = applyTM_MPO(MPSket[2:end], MPSbra[2:end], MPOvec[2:end], YLa; left = true)
 		else
@@ -149,5 +152,5 @@ function applyTM_MPO(MPSket::Vector{<:Any}, MPSbra::Vector{<:Any}, MPOvec::Vecto
 	return res = left == true ? YLa : YRa
 end
 
-applyTM_MPO(MPS::Vector{<:Any}, MPOvec::Vector{MPO}, x::Vector{<:Any}; left::Bool = true) = applyTM_MPO(MPS, MPS, MPOvec, x; left = left)
+applyTM_MPO(MPS::Vector{<:Any}, MPOvec::Vector{<:MPOsparseT}, x::Vector{<:Any}; left::Bool = true) where {DT<:Number, D} = applyTM_MPO(MPS, MPS, MPOvec, x; left = left)
 

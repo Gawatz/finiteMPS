@@ -2,7 +2,7 @@
 #
 #	apply Heff
 #
-function applyHeff(x::AbstractArray{ComplexF64}, localMPO::MPO, L::Array{<:Any,1}, R::Array{<:Any,1})	
+function applyHeff(x::AbstractArray{ComplexF64}, localMPO::MPOsparseT, L::Array{<:Any,1}, R::Array{<:Any,1})	
 	
 	res = zeros(ComplexF64, size(L[1])[1], size(x)[2], size(R[1])[1])
 	tmp = zeros(ComplexF64, size(L[1])[2], size(R[1])[1])

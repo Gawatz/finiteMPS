@@ -1,7 +1,8 @@
 # DT can be block sparse structure or normal tensor 
 struct MPS{DT}
-
 	Mvec::Vector{DT}
+
+
 end
 
 
@@ -21,8 +22,7 @@ function setindex(mps::MPS, v, idx::Int)
 	mps.Mvec[idx] = v
 end
 
-
-
+sysSize(mps::MPS) = length(mps.Mvec)
 #
 #	simple arimetric 
 #

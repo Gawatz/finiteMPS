@@ -108,9 +108,10 @@ uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 [[Logging]]
 uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
 
-[[MPOmodule2]]
-path = "../MPOmodule2"
-uuid = "7e2b9f2f-1ae8-421f-9457-244b47e7a1fe"
+[[MPOmodule]]
+deps = ["LinearAlgebra", "TensorOperations"]
+path = "../MPOmodule"
+uuid = "fb992cd2-2238-486a-9b7f-0509ae0eaf01"
 version = "0.1.0"
 
 [[MacroTools]]

@@ -1,4 +1,4 @@
-function evo_sweep(MPSvec::Vector{<:Any}, Cpre::AbstractArray{<:Number}, MPOvec::Vector{MPO}, RBlocks::Vector{<:Any}, dτ::Union{Float64,ComplexF64}) 
+function evo_sweep(MPSvec::Vector{<:Any}, Cpre::AbstractArray{<:Number}, MPOvec::Vector{<:MPOsparseT}, RBlocks::Vector{<:Any}, dτ::Union{Float64,ComplexF64}) 
 	
 	#
 	#	foward sweep
@@ -130,7 +130,7 @@ function evo_sweep(MPSvec::Vector{<:Any}, Cpre::AbstractArray{<:Number}, MPOvec:
 end
 
 
-function evo_sweep_2Site(MPSvec::Vector{<:Any}, Cpre::AbstractArray{<:Number}, MPOvec::Vector{MPO}, RBlocks::Vector{<:Any}, dτ::Union{Float64,ComplexF64}; maxDim::Int = 200) 
+function evo_sweep_2Site(MPSvec::Vector{<:Any}, Cpre::AbstractArray{<:Number}, MPOvec::Vector{<:MPOsparseT}, RBlocks::Vector{<:Any}, dτ::Union{Float64,ComplexF64}; maxDim::Int = 200) 
 	
 	#
 	#	foward sweep
@@ -302,7 +302,7 @@ end
 
 
 
-function vmps_sweep(MPS::Vector{<:Any}, Cpre::AbstractArray, MPOvec::Vector{MPO}, RBlocks::Vector{<:Any}) 
+function vmps_sweep(MPS::Vector{<:Any}, Cpre::AbstractArray, MPOvec::Vector{<:MPOsparseT}, RBlocks::Vector{<:Any}) 
 	
 	#
 	#	foward sweep
@@ -435,8 +435,7 @@ function applyMPO_sweep(MPSvec, new_MPSvec, MPOvec, RBlocks)
 		Renv = RBlocks[end-(site-1)]
 		Lenv = LBlocks[site]
 		
-		bDim = typeof(localMPO.bDim) == Int ? (localMPO.bDim, localMPO.bDim) : localMPO.bDim 
-		Heff(x) = applyHeff(x, bDim ,localMPO.Operator , localMPO.Op_index ,Lenv, Renv)
+		Heff(x) = applyHeff(x, localMPO, Lenv, Renv)
 		AR_site = MPSvec[site]
 		@tensor MPSvec[site][α, d, β] := Cpre[α, γ]*AR_site[γ, d, β]
 	
@@ -482,7 +481,7 @@ function applyMPO_sweep(MPSvec, new_MPSvec, MPOvec, RBlocks)
 		
 		localMPO = MPOvec[site]
 		bDim = typeof(localMPO.bDim) == Int ? (localMPO.bDim, localMPO.bDim) : localMPO.bDim 
-		Heff(x) = applyHeff(x, bDim,localMPO.Operator , localMPO.Op_index ,Lenv, Renv)
+		Heff(x) = applyHeff(x, localMPO, Lenv, Renv)
 
 		# multiply A(site) with Cpre to form M
 		new_M = Heff(MPSvec[site])
@@ -517,11 +516,11 @@ function applyMPO_sweep(MPSvec, new_MPSvec, MPOvec, RBlocks)
 	return new_MPSvec, RBlocks
 end
 
-function iter_applyMPO(MPSvec::Vector{<:Any}, MPOvec::Vector{MPO}, new_MaxD::Int; Niter = 1)	
+function iter_applyMPO(MPSvec::Vector{<:Any}, MPOvec::Vector{<:MPOsparseT}, new_MaxD::Int; Niter = 1)	
 	N = size(MPSvec)[1]
 	d = size(MPSvec[1])[2]
 
-	new_MPSvec, Cvec = finiteMPS(N, d, new_MaxD)
+	new_MPSvec, Cvec = randMPS(N, d, new_MaxD)
 
 	# bring both MPS in right can form 
 	rightCanMPS(MPSvec)
