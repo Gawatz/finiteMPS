@@ -70,7 +70,7 @@ depending on the left(right) canonical condition of M specified by can_left.
 - C: singular values missing to bring M into mixed canonical form
 - Op: local single site operator
 - site: site on which Op should act
-- can_left = true : is MPSvec[site] in left 0r right can. form.
+- can_left = true : is MPSvec[site] in left or right can. form.
 
 return:
 	
@@ -99,6 +99,5 @@ end
 
 function getCoef(MPSvec)
 
-
-
+	# to do get Coefficient vector
 end
