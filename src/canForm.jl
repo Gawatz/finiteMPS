@@ -98,9 +98,9 @@ end
 
 
 """
-    leftCanSite(M; optSVD = false)
+    rightCanSite(M; optSVD = false)
 
-brings M into left canonical form. Either by QR-decomposition or iff optSVD = true
+brings M into right canonical form. Either by QR-decomposition or iff optSVD = true
 bs signular-value decomposition
 
 # Arguments
@@ -132,9 +132,9 @@ end
 
 
 """
-    leftCanSite(M; optSVD = false)
+    rightCanSite(M; optSVD = false)
 
-brings M into left canonical form. Either by QR-decomposition or iff optSVD = true
+brings M into right canonical form. Either by QR-decomposition or iff optSVD = true
 bs signular-value decomposition
 
 # Arguments
