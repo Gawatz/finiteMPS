@@ -24,5 +24,5 @@ end
 
 sysSize(mps::MPS) = length(mps.Mvec)
 #
-#	simple arimetric 
+#	simple arithmetic 
 #
